@@ -351,7 +351,7 @@ parseArgs() {
   fi
 
   if [[ $substituteOnDestination == "y" ]]; then
-    nixCopyOptions+=("--substitute-on-destination")
+    nixCopyOptions+=("--use-substitutes")
   fi
 
   if [[ $vmTest == "n" ]] && [[ -z ${sshConnection} ]]; then
@@ -393,7 +393,7 @@ runSsh() {
 }
 
 nixCopy() {
-  NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $sshKeyDir/nixos-anywhere -vvv ${sshArgs[*]}" nix copy \
+  NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $sshKeyDir/nixos-anywhere -vvv ${sshArgs[*]}" nix-copy-closure \
     "${nixOptions[@]}" \
     "${nixCopyOptions[@]}" \
     "$@"
@@ -656,7 +656,7 @@ runDisko() {
     # We need to do a nix copy first because nix build doesn't have --no-check-sigs
     # Use ssh:// here to avoid https://github.com/NixOS/nix/issues/7359
     nixCopy --to "ssh://$sshConnection?$sshStoreSettings" "${flake}#${flakeAttr}.system.build.${diskoMode}Script" \
-      --derivation --no-check-sigs
+      --include-outputs
     # If we don't use ssh-ng here, we get `error: operation 'getFSAccessor' is not supported by store`
     diskoScript=$(
       nixBuild "${flake}#${flakeAttr}.system.build.${diskoMode}Script" \
@@ -678,7 +678,7 @@ nixosInstall() {
     # We need to do a nix copy first because nix build doesn't have --no-check-sigs
     # Use ssh:// here to avoid https://github.com/NixOS/nix/issues/7359
     nixCopy --to "ssh://$sshConnection?remote-store=local%3Froot=%2Fmnt&$sshStoreSettings" "${flake}#${flakeAttr}.system.build.toplevel" \
-      --derivation --no-check-sigs
+      --include-outputs
     # If we don't use ssh-ng here, we get `error: operation 'getFSAccessor' is not supported by store`
     nixosSystem=$(
       nixBuild "${flake}#${flakeAttr}.system.build.toplevel" \
