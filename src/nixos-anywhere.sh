@@ -394,7 +394,6 @@ runSsh() {
 
 nixCopy() {
   NIX_SSHOPTS="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $sshKeyDir/nixos-anywhere -vvv ${sshArgs[*]}" nix-copy-closure \
-    "${nixOptions[@]}" \
     "${nixCopyOptions[@]}" \
     "$@"
 }
